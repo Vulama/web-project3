@@ -1,0 +1,182 @@
+<!doctype html>
+<html>
+
+<head>
+    <title>Web lab 3</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="/styles/main.css">
+</head>
+
+<body>
+    <canvas id="canvas"></canvas>
+</body>
+
+<script>
+    var canvas = document.getElementById("canvas");
+
+    var context = canvas.getContext("2d");
+
+    window_width = window.innerWidth;
+    window_height = window.innerHeight;
+
+    canvas.width = window_width;
+    canvas.height = window_height;
+    canvas.style.background = "#8f8";
+
+    counter = 0;
+
+    class Circle {
+        constructor(xpos, ypos, radius, speed) {
+
+            this.position_x = xpos;
+            this.position_y = ypos;
+
+            this.radius = radius;
+
+            this.speed = speed;
+
+            this.dx = 1 * this.speed;
+            this.dy = 1 * this.speed;
+        }
+
+        draw(context) {
+            context.beginPath();
+            context.strokeStyle = 'black';
+            context.lineWidth = 5;
+            context.rect(this.position_x - this.radius, this.position_y - this.radius, this.radius*2, this.radius*2);
+            context.fillStyle = 'white';
+            context.fill();
+            context.stroke();
+            context.closePath();
+        }
+
+        update() {
+            this.draw(context);
+            
+            var speedDiff = randomNumber(-0.5, 0.6)
+
+            if ( (this.position_x + this.radius) > window_width ) {
+                this.dx = -this.dx;
+                this.dx -= speedDiff;
+                if(this.dy > 0){
+                    this.dy += speedDiff;
+                }else {
+                    this.dy -= speedDiff;
+                }
+                //counter++;
+            }
+            
+            if ( (this.position_x - this.radius) < 0 ) {
+                this.dx = -this.dx;
+                this.dx += speedDiff;
+                if(this.dy > 0){
+                    this.dy += speedDiff;
+                }else {
+                    this.dy -= speedDiff;
+                }
+                //counter++;
+            }
+
+            if ( (this.position_y - this.radius) < 0 ) {
+                this.dy = -this.dy;
+                this.dy += speedDiff;
+                if(this.dx > 0){
+                    this.dx += speedDiff;
+                }else {
+                    this.dx -= speedDiff;
+                }
+                //counter++;
+            }
+
+            if ( (this.position_y + this.radius) > window_height ) {
+                this.dy = -this.dy;
+                this.dy -= speedDiff;
+                if(this.dx > 0){
+                    this.dx += speedDiff;
+                }else {
+                    this.dx -= speedDiff;
+                }
+                //counter++;
+            }
+
+            this.position_x += this.dx;
+            this.position_y += this.dy; 
+            
+        }
+    }
+
+
+    let getDistance = function (xpos1, ypos1, xpos2, ypos2) {
+        var result = Math.sqrt(Math.pow(xpos2 - xpos1, 2) + Math.pow(ypos2 - ypos1, 2));
+        return result;
+    }
+
+    let randomNumber = function (min, max) {
+        var result = Math.random() * (max - min) + min;
+        return result;
+    }
+
+    let updateScore = function(score, eleNo){
+        context.font = "30px Comic Sans MS";
+        context.fillStyle = "red";
+        context.textAlign = "end";
+        context.fillText( score + " out of " + Math.ceil(eleNo), canvas.width - 30, 50);
+    }
+
+    var all_squares = [];
+
+    var eleNo = randomNumber(5, 10);
+
+    for (var i = 0; i < eleNo; i++) {
+
+        var radius = 50;
+        var random_x = randomNumber(radius, (window_width - radius));
+        var random_y = randomNumber(radius, (window_height - radius));
+
+        for (var a = 0; a < all_squares.length; a++) {
+            if ((getDistance(random_x, random_y, all_squares[a].xpos, all_squares[a].ypos) - radius + all_squares[a].radius < 0)) {
+                random_x = randomNumber(radius, (window_width - radius));
+                random_y = randomNumber(radius, (window_height - radius));
+            }
+            a = all_squares.length;
+        }
+
+        let my_circle = new Circle(random_x, random_y, radius, randomNumber(1.5, 2.5), 'Black');
+        all_squares.push(my_circle);
+    }
+
+
+    let updateCircle = function () {
+        requestAnimationFrame(updateCircle);
+        
+        context.clearRect(0, 0, window_width, window_height);
+
+        all_squares.forEach(element => {
+            element.update();
+        })
+
+        updateScore(counter, eleNo)
+    }
+
+    updateCircle();
+
+    canvas.addEventListener('click', (event) => {
+        var clickx = event.pageX;
+        var clicky = event.pageY;
+
+        var clickedElement = all_squares.findLast(element =>  
+            element.position_x + 50 > clickx &&
+            element.position_x - 50 < clickx &&
+            element.position_y + 50 > clicky &&
+            element.position_y - 50 < clicky
+        )
+
+        if(clickedElement !== undefined) {
+            all_squares.splice(all_squares.indexOf(clickedElement), 1);
+            counter += 1;
+        }
+    });
+</script>
+
+</html>
